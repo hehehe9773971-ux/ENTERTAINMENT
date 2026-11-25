@@ -5,60 +5,126 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entertainment Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:#090909;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-header{
-  text-align:center;
-  padding:28px 12px;
-  border-bottom:1px solid #b58b35;
-}
+body{margin:0;background:#090909;color:white;font-family:Arial,sans-serif}
+header{text-align:center;padding:25px 12px;border-bottom:1px solid #b58b35}
 h1{color:#e6bd60;letter-spacing:3px}
-header p{color:#c5a45b}
-main{max-width:850px;margin:35px auto;padding:15px}
-.card{
-  background:#171717;
-  border:1px solid #a98437;
-  border-radius:12px;
-  padding:22px;
-  margin-bottom:18px;
-}
-.card h2{color:#e6bd60}
-.tag{
-  color:#e6bd60;
-  font-size:12px;
-  letter-spacing:2px;
-}
+.notice{color:#e6bd60;font-size:12px}
+main{max-width:850px;margin:30px auto;padding:15px}
+.card{background:#171717;border:1px solid #a98437;border-radius:12px;padding:20px;margin-bottom:18px}
+h2{color:#e6bd60}
+input{width:100%;padding:13px;margin:7px 0;background:#252525;color:white;border:1px solid #98752e;border-radius:7px}
+button{padding:12px 18px;background:#c69b42;color:#111;border:0;border-radius:7px;font-weight:bold;margin:6px 0;cursor:pointer}
+.entry{padding:12px 0;border-bottom:1px solid #444}
+.value{font-size:23px;color:#e6bd60;font-weight:bold}
+.small{color:#aaa;font-size:12px}
 footer{text-align:center;color:#999;padding:25px}
 </style>
 </head>
 <body>
 <header>
-  <h1>UP SATTA KING</h1>
-  <p>DAILY UPDATES & ANNOUNCEMENTS</p>
+<h1>UP SATTA KING</h1>
+<p>DAILY UPDATES & ANNOUNCEMENTS</p>
+<p class="notice">FICTIONAL ENTERTAINMENT BOARD — NOT BETTING RESULTS</p>
 </header>
+
 <main>
-  <div class="card">
-    <span class="tag">WELCOME</span>
-    <h2>Welcome to our portal</h2>
-    <p>Discover daily entertainment announcements and updates.</p>
-  </div>
-  <div class="card">
-    <span class="tag">LATEST NEWS</span>
-    <h2>Coming Soon</h2>
-    <p>New entertainment content will appear here.</p>
-  </div>
-  <div class="card">
-    <span class="tag">NOTICE</span>
-    <h2>Fictional Entertainment</h2>
-    <p>This website is for entertainment purposes only.</p>
-  </div>
+<div class="card">
+<h2>Daily Number Board</h2>
+<div id="updates">Loading updates...</div>
+</div>
+
+<div class="card">
+<h2>Admin Login</h2>
+<input id="email" type="email" placeholder="Admin email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
+<p id="status" class="small"></p>
+</div>
+
+<div class="card" id="adminPanel" style="display:none">
+<h2>Add Daily Entry</h2>
+<input id="entryTitle" placeholder="Entry title">
+<input id="entryValue" placeholder="Display value">
+<button onclick="addEntry()">Publish Entry</button>
+</div>
 </main>
-<footer>© 2026 Entertainment Portal</footer>
+
+<footer>© 2026 Portal</footer>
+
+<script>
+const SUPABASE_URL = "https://sattakingup.supabase.co";
+const SUPABASE_KEY = "upsattakinglala";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loadUpdates(){
+ const box=document.getElementById("updates");
+ const {data,error}=await db.from("ENTERTAINMENT")
+   .select("*").order("created_at",{ascending:false});
+
+ if(error){box.textContent="Unable to load updates.";return;}
+ if(!data.length){box.textContent="No entries published yet.";return;}
+
+ box.innerHTML=data.map(item=>`
+ <div class="entry">
+ <h3>${escapeHTML(item.title)}</h3>
+ <div class="value">${escapeHTML(item.display_value)}</div>
+ <div class="small">${new Date(item.created_at).toLocaleString()}</div>
+ </div>`).join("");
+}
+
+function escapeHTML(value){
+ return String(value ?? "").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+async function login(){
+ const email=document.getElementById("email").value;
+ const password=document.getElementById("password").value;
+ const {error}=await db.auth.signInWithPassword({email,password});
+ document.getElementById("status").textContent=
+ error ? error.message : "Login successful";
+ checkAdmin();
+}
+
+async function logout(){
+ await db.auth.signOut();
+ checkAdmin();
+}
+
+async function checkAdmin(){
+ const {data}=await db.auth.getSession();
+ const loggedIn=!!data.session;
+ document.getElementById("adminPanel").style.display=
+ loggedIn ? "block":"none";
+ document.getElementById("status").textContent=
+ loggedIn ? "Admin logged in":"Not logged in";
+}
+
+async function addEntry(){
+ const title=document.getElementById("entryTitle").value.trim();
+ const value=document.getElementById("entryValue").value.trim();
+ if(!title||!value){alert("Fill both fields");return;}
+
+ const {error}=await db.from("ENTERTAINMENT").insert({
+ title:title,display_value:value
+ });
+
+ if(error){alert(error.message);return;}
+ alert("Entry published!");
+ document.getElementById("entryTitle").value="";
+ document.getElementById("entryValue").value="";
+ loadUpdates();
+}
+
+db.auth.onAuthStateChange(()=>checkAdmin());
+loadUpdates();
+checkAdmin();
+</script>
 </body>
 </html>
