@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entertainment Calendar</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:#fff;font-family:Arial}
+header{text-align:center;padding:25px 12px;border-bottom:1px solid #bd963e}
+h1{color:#e6bd60;letter-spacing:3px}
+main{padding:18px;max-width:1100px;margin:auto}
+.card{background:#171717;border:1px solid #98752e;border-radius:12px;padding:18px}
+h2{color:#e6bd60}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th,td{padding:14px;border:1px solid #705727;text-align:center}
+th{background:#30230e;color:#e6bd60}
+td{background:#171717;min-width:110px}
+.date{color:#e6bd60;font-weight:bold}
+footer{text-align:center;color:#888;padding:25px}
+</style>
+</head>
+<body>
+<header>
+<h1>ENTERTAINMENT</h1>
+<p>DAILY ENTERTAINMENT CALENDAR</p>
+</header>
+<main>
+<div class="card">
+<h2>December 2026 Calendar</h2>
+<p>Fictional entertainment announcements and daily events.</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Event 1</th>
+<th>Event 2</th>
+<th>Event 3</th>
+<th>Event 4</th>
+<th>Event 5</th>
+</tr>
+</thead>
+<tbody id="calendar"></tbody>
+</table>
+</div>
+</div>
+</main>
+<footer>© 2026 Entertainment Portal</footer>
+<script>
+const body=document.getElementById("calendar");
+for(let day=1;day<=31;day++){
+ const date=String(day).padStart(2,"0")+" Dec 2026";
+ const row=document.createElement("tr");
+ row.innerHTML=`<td class="date">${date}</td>`+
+ Array.from({length:5},()=>"<td>—</td>").join("");
+ body.appendChild(row);
+}
+</script>
+</body>
+</html>
