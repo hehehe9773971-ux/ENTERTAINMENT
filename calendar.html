@@ -12,7 +12,7 @@
 body{
  margin:0;
  background:#090909;
- color:white;
+ color:#fff;
  font-family:Arial,sans-serif;
 }
 
@@ -49,13 +49,13 @@ h2{color:#e6bd60}
  margin:18px 0;
 }
 
-select,button{
+select,button,input{
  background:#211a0d;
  color:#e6bd60;
  border:1px solid #98752e;
- padding:12px;
+ padding:11px;
  border-radius:7px;
- font-size:15px;
+ font-size:14px;
 }
 
 button{cursor:pointer}
@@ -75,11 +75,11 @@ button:hover{
 table{
  border-collapse:collapse;
  width:100%;
- min-width:500px;
+ min-width:550px;
 }
 
 th,td{
- padding:13px;
+ padding:12px;
  border:1px solid #705727;
  text-align:center;
 }
@@ -94,6 +94,25 @@ td{background:#171717}
 .date{
  color:#e6bd60;
  font-weight:bold;
+}
+
+.event-input{
+ width:100%;
+ min-width:120px;
+ color:white;
+ margin-bottom:6px;
+}
+
+.save-btn{
+ padding:8px 12px;
+ margin:2px;
+}
+
+.delete-btn{
+ color:#ff9999;
+ border-color:#8b3939;
+ padding:8px 12px;
+ margin:2px;
 }
 
 .bottom-controls{
@@ -121,17 +140,12 @@ footer{
 <div class="card">
 
 <h2>Calendar</h2>
-<p>Explore dates, months and yearly announcements.</p>
+<p>Explore dates, months and yearly events.</p>
 
 <div class="controls">
 <button onclick="changeMonth(-1)">← Previous</button>
-
-<select id="monthSelect" onchange="updateCalendar()">
-</select>
-
-<select id="yearSelect" onchange="updateCalendar()">
-</select>
-
+<select id="monthSelect" onchange="updateCalendar()"></select>
+<select id="yearSelect" onchange="updateCalendar()"></select>
 <button onclick="changeMonth(1)">Next →</button>
 </div>
 
@@ -174,15 +188,26 @@ const months=[
 "September","October","November","December"
 ];
 
+const weekdays=[
+"Sunday","Monday","Tuesday","Wednesday",
+"Thursday","Friday","Saturday"
+];
+
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
 const bottomMonth=document.getElementById("bottomMonth");
 const bottomYear=document.getElementById("bottomYear");
 const calendar=document.getElementById("calendar");
 
-const today=new Date();
 let selectedMonth=11;
 let selectedYear=2026;
+let events={};
+
+try{
+ events=JSON.parse(localStorage.getItem("calendarEvents")||"{}");
+}catch(error){
+ events={};
+}
 
 months.forEach((month,index)=>{
  monthSelect.add(new Option(month,index));
@@ -194,7 +219,15 @@ for(let year=2026;year<=2035;year++){
  bottomYear.add(new Option(year,year));
 }
 
+function saveEvents(){
+ localStorage.setItem(
+  "calendarEvents",
+  JSON.stringify(events)
+ );
+}
+
 function updateCalendar(){
+
  selectedMonth=Number(monthSelect.value);
  selectedYear=Number(yearSelect.value);
 
@@ -209,31 +242,85 @@ function updateCalendar(){
  calendar.innerHTML="";
 
  const totalDays=new Date(
- selectedYear,selectedMonth+1,0
+  selectedYear,
+  selectedMonth+1,
+  0
  ).getDate();
 
  for(let day=1;day<=totalDays;day++){
 
-  const date=new Date(selectedYear,selectedMonth,day);
+  const key=
+   selectedYear+"-"+selectedMonth+"-"+day;
 
-  const weekdays=[
-   "Sunday","Monday","Tuesday","Wednesday",
-   "Thursday","Friday","Saturday"
-  ];
+  const date=new Date(
+   selectedYear,
+   selectedMonth,
+   day
+  );
 
   const row=document.createElement("tr");
 
-  row.innerHTML=`
-   <td class="date">${String(day).padStart(2,"0")}</td>
-   <td>${weekdays[date.getDay()]}</td>
-   <td>—</td>
-  `;
+  const dateCell=document.createElement("td");
+  dateCell.className="date";
+  dateCell.textContent=String(day).padStart(2,"0");
+
+  const dayCell=document.createElement("td");
+  dayCell.textContent=weekdays[date.getDay()];
+
+  const eventCell=document.createElement("td");
+
+  const input=document.createElement("input");
+  input.className="event-input";
+  input.type="text";
+  input.placeholder="Write an event...";
+  input.value=events[key]||"";
+
+  const saveButton=document.createElement("button");
+  saveButton.className="save-btn";
+  saveButton.textContent="Save";
+
+  saveButton.onclick=()=>{
+   const value=input.value.trim();
+
+   if(value){
+    events[key]=value;
+   }else{
+    delete events[key];
+   }
+
+   saveEvents();
+   saveButton.textContent="Saved!";
+
+   setTimeout(()=>{
+    saveButton.textContent="Save";
+   },1200);
+  };
+
+  const deleteButton=document.createElement("button");
+  deleteButton.className="delete-btn";
+  deleteButton.textContent="Delete";
+
+  deleteButton.onclick=()=>{
+   delete events[key];
+   input.value="";
+   saveEvents();
+  };
+
+  eventCell.appendChild(input);
+  eventCell.appendChild(document.createElement("br"));
+  eventCell.appendChild(saveButton);
+  eventCell.appendChild(deleteButton);
+
+  row.appendChild(dateCell);
+  row.appendChild(dayCell);
+  row.appendChild(eventCell);
 
   calendar.appendChild(row);
  }
 }
 
 function changeMonth(amount){
+
  selectedMonth+=amount;
 
  if(selectedMonth>11){
@@ -246,7 +333,15 @@ function changeMonth(amount){
   selectedYear--;
  }
 
- selectedYear=Math.max(2026,Math.min(2035,selectedYear));
+ if(selectedYear>2035){
+  selectedYear=2035;
+  selectedMonth=11;
+ }
+
+ if(selectedYear<2026){
+  selectedYear=2026;
+  selectedMonth=0;
+ }
 
  monthSelect.value=selectedMonth;
  yearSelect.value=selectedYear;
