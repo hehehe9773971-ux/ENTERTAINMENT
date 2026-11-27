@@ -4,60 +4,264 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Calendar</title>
+<title>Entertainment Calendar</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090909;color:#fff;font-family:Arial}
-header{text-align:center;padding:25px 12px;border-bottom:1px solid #bd963e}
-h1{color:#e6bd60;letter-spacing:3px}
-main{padding:18px;max-width:1100px;margin:auto}
-.card{background:#171717;border:1px solid #98752e;border-radius:12px;padding:18px}
+
+body{
+ margin:0;
+ background:#090909;
+ color:white;
+ font-family:Arial,sans-serif;
+}
+
+header{
+ text-align:center;
+ padding:25px 12px;
+ border-bottom:1px solid #bd963e;
+}
+
+h1{
+ color:#e6bd60;
+ letter-spacing:3px;
+}
+
+main{
+ padding:18px;
+ max-width:1100px;
+ margin:auto;
+}
+
+.card{
+ background:#171717;
+ border:1px solid #98752e;
+ border-radius:12px;
+ padding:18px;
+}
+
 h2{color:#e6bd60}
+
+.controls{
+ display:flex;
+ flex-wrap:wrap;
+ gap:10px;
+ margin:18px 0;
+}
+
+select,button{
+ background:#211a0d;
+ color:#e6bd60;
+ border:1px solid #98752e;
+ padding:12px;
+ border-radius:7px;
+ font-size:15px;
+}
+
+button{cursor:pointer}
+
+button:hover{
+ background:#493516;
+}
+
+.month-title{
+ text-align:center;
+ color:#e6bd60;
+ margin:20px 0;
+}
+
 .table-wrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;min-width:650px}
-th,td{padding:14px;border:1px solid #705727;text-align:center}
-th{background:#30230e;color:#e6bd60}
-td{background:#171717;min-width:110px}
-.date{color:#e6bd60;font-weight:bold}
-footer{text-align:center;color:#888;padding:25px}
+
+table{
+ border-collapse:collapse;
+ width:100%;
+ min-width:500px;
+}
+
+th,td{
+ padding:13px;
+ border:1px solid #705727;
+ text-align:center;
+}
+
+th{
+ background:#30230e;
+ color:#e6bd60;
+}
+
+td{background:#171717}
+
+.date{
+ color:#e6bd60;
+ font-weight:bold;
+}
+
+.bottom-controls{
+ margin-top:30px;
+ padding-top:20px;
+ border-top:1px solid #705727;
+}
+
+footer{
+ text-align:center;
+ color:#888;
+ padding:25px;
+}
 </style>
 </head>
+
 <body>
+
 <header>
-<h1>UP SATTA KING</h1>
-<p>CALENDAR</p>
+<h1>ENTERTAINMENT</h1>
+<p>YEARLY CALENDAR</p>
 </header>
+
 <main>
 <div class="card">
-<h2>December 2026 Calendar</h2>
-<p>Daily announcements and daily events.</p>
+
+<h2>Calendar</h2>
+<p>Explore dates, months and yearly announcements.</p>
+
+<div class="controls">
+<button onclick="changeMonth(-1)">← Previous</button>
+
+<select id="monthSelect" onchange="updateCalendar()">
+</select>
+
+<select id="yearSelect" onchange="updateCalendar()">
+</select>
+
+<button onclick="changeMonth(1)">Next →</button>
+</div>
+
+<h2 class="month-title" id="monthTitle"></h2>
+
 <div class="table-wrap">
 <table>
 <thead>
 <tr>
 <th>Date</th>
-<th>Pilibhit Bzr</th>
-<th>Dswr</th>
-<th>Frbd</th>
-<th>Gzbd</th>
-<th>Gali</th>
+<th>Day</th>
+<th>Event / Announcement</th>
 </tr>
 </thead>
 <tbody id="calendar"></tbody>
 </table>
 </div>
+
+<div class="bottom-controls">
+<h2>Switch Calendar</h2>
+<p>Choose another month or year.</p>
+
+<div class="controls">
+<select id="bottomMonth" onchange="syncBottom()"></select>
+<select id="bottomYear" onchange="syncBottom()"></select>
+</div>
+</div>
+
 </div>
 </main>
-<footer>© 2026 Entertainment Portal</footer>
+
+<footer>
+© 2026 Entertainment Portal
+</footer>
+
 <script>
-const body=document.getElementById("calendar");
-for(let day=1;day<=31;day++){
- const date=String(day).padStart(2,"0")+" Dec 2026";
- const row=document.createElement("tr");
- row.innerHTML=`<td class="date">${date}</td>`+
- Array.from({length:5},()=>"<td>—</td>").join("");
- body.appendChild(row);
+const months=[
+"January","February","March","April",
+"May","June","July","August",
+"September","October","November","December"
+];
+
+const monthSelect=document.getElementById("monthSelect");
+const yearSelect=document.getElementById("yearSelect");
+const bottomMonth=document.getElementById("bottomMonth");
+const bottomYear=document.getElementById("bottomYear");
+const calendar=document.getElementById("calendar");
+
+const today=new Date();
+let selectedMonth=11;
+let selectedYear=2026;
+
+months.forEach((month,index)=>{
+ monthSelect.add(new Option(month,index));
+ bottomMonth.add(new Option(month,index));
+});
+
+for(let year=2026;year<=2035;year++){
+ yearSelect.add(new Option(year,year));
+ bottomYear.add(new Option(year,year));
 }
+
+function updateCalendar(){
+ selectedMonth=Number(monthSelect.value);
+ selectedYear=Number(yearSelect.value);
+
+ monthSelect.value=selectedMonth;
+ yearSelect.value=selectedYear;
+ bottomMonth.value=selectedMonth;
+ bottomYear.value=selectedYear;
+
+ document.getElementById("monthTitle").textContent=
+ months[selectedMonth]+" "+selectedYear;
+
+ calendar.innerHTML="";
+
+ const totalDays=new Date(
+ selectedYear,selectedMonth+1,0
+ ).getDate();
+
+ for(let day=1;day<=totalDays;day++){
+
+  const date=new Date(selectedYear,selectedMonth,day);
+
+  const weekdays=[
+   "Sunday","Monday","Tuesday","Wednesday",
+   "Thursday","Friday","Saturday"
+  ];
+
+  const row=document.createElement("tr");
+
+  row.innerHTML=`
+   <td class="date">${String(day).padStart(2,"0")}</td>
+   <td>${weekdays[date.getDay()]}</td>
+   <td>—</td>
+  `;
+
+  calendar.appendChild(row);
+ }
+}
+
+function changeMonth(amount){
+ selectedMonth+=amount;
+
+ if(selectedMonth>11){
+  selectedMonth=0;
+  selectedYear++;
+ }
+
+ if(selectedMonth<0){
+  selectedMonth=11;
+  selectedYear--;
+ }
+
+ selectedYear=Math.max(2026,Math.min(2035,selectedYear));
+
+ monthSelect.value=selectedMonth;
+ yearSelect.value=selectedYear;
+
+ updateCalendar();
+}
+
+function syncBottom(){
+ monthSelect.value=bottomMonth.value;
+ yearSelect.value=bottomYear.value;
+ updateCalendar();
+}
+
+updateCalendar();
 </script>
+
 </body>
 </html>
